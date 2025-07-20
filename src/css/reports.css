@@ -1,0 +1,55 @@
+/* Tabla de reportes recientes */
+
+.reports-table-container {
+  background-color: var(--light-bg);
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--border-soft);
+  overflow-x: auto;
+}
+
+.reports-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.reports-table th,
+.reports-table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border-soft);
+  text-align: left;
+  font-size: 0.95rem;
+}
+
+.reports-table th {
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.reports-table td {
+  color: var(--text-main);
+}
+
+.reports-table .status {
+  font-weight: bold;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.5rem;
+  font-size: 0.85rem;
+  display: inline-block;
+}
+
+.status-pending {
+  background-color: #ffdd99;
+  color: #9e6f00;
+}
+
+.status-resolved {
+  background-color: #d4f5dc;
+  color: #1a7e32;
+}
+
+.status-inreview {
+  background-color: #cce5ff;
+  color: #005cbf;
+}
