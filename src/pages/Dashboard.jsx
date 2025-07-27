@@ -1,63 +1,96 @@
-// src/pages/Dashboard.jsx
 import React from "react";
 import { FaExclamationTriangle, FaUsers, FaMapMarkedAlt } from "react-icons/fa";
-import { Line, Bar, Pie } from "react-chartjs-2";
+import { Bar, Pie } from "react-chartjs-2";
+import { useRiskAnalysis } from "../features/statistics/hooks/useRiskAnalysis";
+import { useIncidentDistribution } from "../features/statistics/hooks/useIncidentDistribution";
+import { useDashboardStats } from "../features/statistics/hooks/useDashboardStats";
+
 import {
   Chart as ChartJS,
-  LineElement,
   BarElement,
   ArcElement,
   CategoryScale,
   LinearScale,
-  PointElement,
   Tooltip,
   Legend,
 } from "chart.js";
 
 ChartJS.register(
-  LineElement,
   BarElement,
   ArcElement,
   CategoryScale,
   LinearScale,
-  PointElement,
   Tooltip,
   Legend
 );
 
 const Dashboard = () => {
-  const reportData = {
-    labels: ["Jul 10", "Jul 11", "Jul 12", "Jul 13"],
-    datasets: [
-      {
-        label: "Reportes",
-        data: [5, 6, 12, 10],
-        borderColor: "#007bff",
-        backgroundColor: "rgba(0,123,255,0.1)",
-        fill: true,
-        tension: 0.4,
-      },
-    ],
+  const {
+    data: riskData = [],
+    isLoading: loadingRisk,
+    isError: errorRisk,
+  } = useRiskAnalysis();
+
+  const {
+    data: incidentDistribution = [],
+    isLoading: loadingInc,
+    isError: errorInc,
+  } = useIncidentDistribution();
+
+  const {
+    data: stats,
+    isLoading: loadingStats,
+    isError: errorStats,
+  } = useDashboardStats();
+
+  const isLoading = loadingRisk || loadingInc || loadingStats;
+  const isError = errorRisk || errorInc || errorStats;
+
+  if (isLoading) return <p className="text-center">Cargando estadísticas...</p>;
+  if (isError)
+    return (
+      <p className="text-danger text-center">Error al cargar estadísticas.</p>
+    );
+
+  const reportsToday = incidentDistribution.reduce(
+    (acc, i) => acc + i.count,
+    0
+  );
+
+  const severityColors = {
+    1: "#28a745", // verde
+    2: "#85c940", // verde claro
+    3: "#ffc107", // amarillo
+    4: "#fd7e14", // naranja
+    5: "#dc3545", // rojo
   };
 
-  const userData = {
-    labels: ["Ene", "Feb", "Mar", "Abr", "May"],
+  const riskBarData = {
+    labels: riskData.map((r) => `Severidad ${r.severity}`),
     datasets: [
       {
-        label: "Usuarios",
-        data: [10, 18, 35, 48, 56],
-        backgroundColor: "#28a745",
+        label: "Incidentes",
+        data: riskData.map((r) => r.total_incidents),
+        backgroundColor: riskData.map(
+          (r) => severityColors[r.severity] || "#007bff"
+        ),
       },
     ],
   };
 
   const incidentData = {
-    labels: ["Asaltos/Robos", "Acoso Callejero", "Secuestro", "Peleas"],
+    labels: incidentDistribution.map((i) => i.label),
     datasets: [
       {
         label: "Incidentes",
-        data: [12, 5, 2, 6],
-        backgroundColor: ["#dc3545", "#ffc107", "#6610f2", "#20c997"],
+        data: incidentDistribution.map((i) => i.count),
+        backgroundColor: [
+          "#dc3545", // Acoso Callejero
+          "#ffc107", // Asaltos/Robos
+          "#6610f2", // Secuestro
+          "#20c997", // Peleas de Pandillas
+          "#6c757d", // Otros
+        ],
       },
     ],
   };
@@ -65,49 +98,79 @@ const Dashboard = () => {
   return (
     <div className="container">
       <h4 className="mb-4">Panel General</h4>
+
+      {/* TARJETAS SUPERIORES */}
       <div className="row mb-4">
         <div className="col-md-4">
           <div className="card text-center p-3 shadow-sm">
             <FaExclamationTriangle size={28} className="mb-2 text-danger" />
-            <h6>Reportes hoy</h6>
-            <h4>12</h4>
+            <h6>Reportes totales</h6>
+            <h4>{reportsToday}</h4>
           </div>
         </div>
         <div className="col-md-4">
           <div className="card text-center p-3 shadow-sm">
             <FaUsers size={28} className="mb-2 text-success" />
-            <h6>Usuarios activos</h6>
-            <h4>58</h4>
+            <h6>Usuarios registrados</h6>
+            <h4>{stats?.activeUsers ?? "-"}</h4>
           </div>
         </div>
         <div className="col-md-4">
           <div className="card text-center p-3 shadow-sm">
             <FaMapMarkedAlt size={28} className="mb-2 text-primary" />
-            <h6>Zonas en riesgo</h6>
-            <h4>9</h4>
+            <h6>Zonas de riesgo</h6>
+            <h4>{stats?.zonesAtRisk ?? "-"}</h4>
           </div>
         </div>
       </div>
 
+      {/* GRÁFICAS */}
       <div className="row gy-4">
-        <div className="col-md-6">
-          <div className="card p-3 shadow-sm">
-            <h6 className="mb-3">Evolución de reportes</h6>
-            <Line data={reportData} />
+        <div className="col-md-6 d-flex align-items-stretch">
+          <div className="card p-3 shadow-sm w-100" style={{ height: "420px" }}>
+            <h6 className="mb-3">Severidad de incidentes</h6>
+            {riskData.length > 0 ? (
+              <Bar
+                data={riskBarData}
+                options={{
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  plugins: {
+                    legend: { display: false },
+                  },
+                  scales: {
+                    y: { beginAtZero: true },
+                  },
+                }}
+              />
+            ) : (
+              <p className="text-muted text-center">No hay datos aún.</p>
+            )}
           </div>
         </div>
-
-        <div className="col-md-6">
-          <div className="card p-3 shadow-sm">
-            <h6 className="mb-3">Crecimiento de usuarios</h6>
-            <Bar data={userData} />
-          </div>
-        </div>
-
-        <div className="col-md-6">
-          <div className="card p-3 shadow-sm">
+        <div className="col-md-6 d-flex align-items-stretch">
+          <div
+            className="card p-3 shadow-sm w-100"
+            style={{
+              height: "420px",
+              overflow: "hidden",
+              position: "relative",
+            }}
+          >
             <h6 className="mb-3">Distribución de incidentes</h6>
-            <Pie data={incidentData} />
+            {incidentDistribution.length > 0 ? (
+              <div style={{ height: "100%", position: "relative" }}>
+                <Pie
+                  data={incidentData}
+                  options={{
+                    responsive: true,
+                    maintainAspectRatio: false,
+                  }}
+                />
+              </div>
+            ) : (
+              <p className="text-muted text-center">No hay datos aún.</p>
+            )}
           </div>
         </div>
       </div>

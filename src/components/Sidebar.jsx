@@ -12,8 +12,8 @@ import {
 const Sidebar = () => {
   const navItems = [
     { label: "Dashboard", path: "/", icon: <FaTachometerAlt /> },
-    { label: "Reportes", path: "/reportes", icon: <FaClipboardList /> },
-    { label: "Usuarios", path: "/usuarios", icon: <FaUsers /> },
+    { label: "Usuarios", path: "/reportes", icon: <FaUsers /> },
+    { label: "Reportes", path: "/usuarios", icon: <FaClipboardList /> },
     { label: "Zonas", path: "/zonas", icon: <FaMapMarkedAlt /> },
   ];
 
